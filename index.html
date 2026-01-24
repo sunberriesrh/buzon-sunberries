@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buzón - Sun Berries</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sun: { green: '#006400', gold: '#fccb06', red: '#D32F2F', light: '#f0fdf4' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen py-8 px-4 font-sans text-gray-800">
+
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border-t-8 border-sun-green">
+        
+        <div class="bg-sun-light p-8 text-center border-b border-gray-100">
+            <img src="logo.png" alt="Sun Berries" class="h-28 mx-auto mb-4 drop-shadow-md hover:scale-105 transition">
+            <h1 class="text-3xl font-extrabold text-sun-green uppercase tracking-wide">Buzón de Quejas y Sugerencias</h1>
+            
+            <div class="mt-6 text-left text-sm text-gray-600 space-y-3 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <p class="font-bold text-sun-green">Estimados colaboradores:</p>
+                <p>Bienvenidos a este espacio digital.</p>
+                <p>Por favor, deposita aquí tu queja o sugerencia de manera <span class="font-bold">clara y concisa</span>.</p>
+                <p>Recuerda que tu retroalimentación será tratada con <span class="font-bold">total confidencialidad</span>.</p>
+                <p>El equipo de <span class="font-bold text-gray-800">Recursos Humanos</span> trabajará en brindarte una solución lo antes posible.</p>
+                <p class="italic">Agradecemos tu confianza y paciencia.</p>
+            </div>
+        </div>
+
+        <form id="buzonForm" class="p-8 space-y-8">
+            
+            <div>
+                <label class="block font-bold text-gray-800 text-lg mb-3">¿En qué rancho trabajas? <span class="text-red-500">*</span></label>
+                <div class="space-y-3">
+                    <label class="flex items-center p-3 border rounded-lg hover:bg-green-50 cursor-pointer transition group">
+                        <input type="radio" name="rancho" value="Pocitos" required class="mr-3 h-5 w-5 text-sun-green focus:ring-sun-green">
+                        <span class="group-hover:text-sun-green font-medium">Pocitos</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg hover:bg-green-50 cursor-pointer transition group">
+                        <input type="radio" name="rancho" value="Majadas" class="mr-3 h-5 w-5 text-sun-green focus:ring-sun-green">
+                        <span class="group-hover:text-sun-green font-medium">Majadas</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg hover:bg-green-50 cursor-pointer transition group">
+                        <input type="radio" name="rancho" value="San Guillermo" class="mr-3 h-5 w-5 text-sun-green focus:ring-sun-green">
+                        <span class="group-hover:text-sun-green font-medium">San Guillermo</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg hover:bg-green-50 cursor-pointer transition group">
+                        <input type="radio" name="rancho" value="Barro 1" class="mr-3 h-5 w-5 text-sun-green focus:ring-sun-green">
+                        <span class="group-hover:text-sun-green font-medium">Barro 1</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg hover:bg-green-50 cursor-pointer transition group">
+                        <input type="radio" name="rancho" value="Barro 2" class="mr-3 h-5 w-5 text-sun-green focus:ring-sun-green">
+                        <span class="group-hover:text-sun-green font-medium">Barro 2</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg hover:bg-green-50 cursor-pointer transition group">
+                        <input type="radio" name="rancho" value="Barro 3" class="mr-3 h-5 w-5 text-sun-green focus:ring-sun-green">
+                        <span class="group-hover:text-sun-green font-medium">Barro 3</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg hover:bg-green-50 cursor-pointer transition group">
+                        <input type="radio" name="rancho" value="Departamentos" class="mr-3 h-5 w-5 text-sun-green focus:ring-sun-green">
+                        <span class="group-hover:text-sun-green font-medium">Departamentos</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-gray-800 text-lg mb-1">¿Cuál es tu puesto?</label>
+                <span class="text-sm text-gray-500 mb-3 block">(Opcional)</span>
+                
+                <select name="puesto" class="w-full rounded-lg border-gray-300 shadow-sm p-3 border-2 focus:border-sun-green focus:outline-none bg-white">
+                    <option value="">Selecciona una opción (si deseas)...</option>
+                    <option value="Encargado de campo">Encargado de campo</option>
+                    <option value="Coordinador de campo">Coordinador de campo</option>
+                    <option value="Lider de cuadrilla">Lider de cuadrilla</option>
+                    <option value="Auxiliar de campo">Auxiliar de campo</option>
+                    <option value="Lider de fumigacion">Lider de fumigacion</option>
+                    <option value="Fumigador">Fumigador</option>
+                    <option value="Lider de riego">Lider de riego</option>
+                    <option value="Auxiliar de riego">Auxiliar de riego</option>
+                    <option value="Vigilante">Vigilante</option>
+                    <option value="Reclutador">Reclutador</option>
+                    <option value="Limpieza">Limpieza</option>
+                    <option value="Chofer de ruta">Chofer de ruta</option>
+                    <option value="Chofer de campo">Chofer de campo</option>
+                    <option value="Almacenista">Almacenista</option>
+                    <option value="Cocinera">Cocinera</option>
+                    <option value="Otros">Otros</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div class="md:col-span-2 text-sm text-gray-500 italic mb-1 text-center">
+                    Tus datos son opcionales si prefieres anonimato.
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1">Nombre Completo</label>
+                    <input type="text" name="nombre_completo" class="w-full rounded-lg border-gray-300 p-2 border focus:border-sun-green outline-none" placeholder="Opcional">
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1">Correo Electrónico</label>
+                    <input type="email" name="correo" class="w-full rounded-lg border-gray-300 p-2 border focus:border-sun-green outline-none" placeholder="Opcional">
+                </div>
+            </div>
+
+            <hr class="border-gray-200">
+
+            <div>
+                <label class="block font-bold text-gray-800 text-lg mb-3">¿Cuál es tu situación? <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <label class="flex items-center justify-center p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-red-500 hover:bg-red-50 cursor-pointer transition text-center h-full">
+                        <input type="radio" name="tipo_situacion" value="Queja" required class="mr-2 h-5 w-5 text-red-600 focus:ring-red-600">
+                        <span class="font-bold text-gray-700">⚠️ Queja</span>
+                    </label>
+                    <label class="flex items-center justify-center p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-sun-gold hover:bg-yellow-50 cursor-pointer transition text-center h-full">
+                        <input type="radio" name="tipo_situacion" value="Sugerencia" class="mr-2 h-5 w-5 text-sun-gold focus:ring-sun-gold">
+                        <span class="font-bold text-gray-700">💡 Sugerencia</span>
+                    </label>
+                    <label class="flex items-center justify-center p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-sun-green hover:bg-green-50 cursor-pointer transition text-center h-full">
+                        <input type="radio" name="tipo_situacion" value="Felicitaciones" class="mr-2 h-5 w-5 text-sun-green focus:ring-sun-green">
+                        <span class="font-bold text-gray-700">👏 Felicitaciones</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-gray-800 text-lg mb-1">QUEJA, SUGERENCIA O FELICITACIONES <span class="text-red-500">*</span></label>
+                <p class="text-sm text-gray-500 mb-2">Explica tu situación detalladamente.</p>
+                <textarea name="mensaje" rows="6" required class="w-full rounded-lg border-gray-300 shadow-sm p-4 border-2 focus:border-sun-green focus:outline-none text-gray-700 text-lg" placeholder="Escribe aquí..."></textarea>
+            </div>
+
+            <div class="text-center bg-sun-light p-4 rounded-lg border border-green-100">
+                <p class="font-bold text-sun-green">AGRICOLA SUN BERRIES</p>
+                <p class="text-sm text-gray-600">agradece tu colaboración y confianza. Estaremos atendiendo tu situación con compromiso.</p>
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-sun-green text-white font-extrabold text-xl py-4 px-6 rounded-xl shadow-lg hover:bg-green-800 transition transform hover:-translate-y-1">
+                ENVIAR
+            </button>
+            
+            <p id="mensajeExito" class="hidden text-center text-sun-green font-bold text-xl mt-6 p-6 bg-green-50 rounded-xl border-2 border-sun-green">
+                ✅ ¡Recibido! Gracias por tu confianza. <br> <span class="text-sm font-normal text-gray-600">Que tengas un excelente día.</span>
+            </p>
+
+        </form>
+    </div>
+    
+    <div class="text-center mt-8 text-xs text-gray-400">© 2026 Sun Berries - RH</div>
+
+    <script>
+        // --- CONFIGURACIÓN ---
+        // ¡USA LAS MISMAS CLAVES QUE EN LA ENTREVISTA!
+        const supabaseUrl = 'TU_URL_DE_SUPABASE'
+        const supabaseKey = 'TU_CLAVE_ANON_DE_SUPABASE'
+        const clienteSupabase = supabase.createClient(supabaseUrl, supabaseKey)
+
+        // --- ENVÍO DEL FORMULARIO ---
+        document.getElementById('buzonForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "Enviando...";
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const formData = new FormData(e.target);
+            // Filtramos los campos vacíos para que Supabase reciba NULL en lugar de string vacío ""
+            const dataObj = {};
+            formData.forEach((value, key) => {
+                dataObj[key] = value.trim() === "" ? null : value;
+            });
+
+            // Insertar en tabla 'buzon_quejas'
+            const { error } = await clienteSupabase
+                .from('buzon_quejas')
+                .insert([dataObj]);
+
+            if (error) {
+                alert('Error al enviar: ' + error.message);
+                btn.disabled = false;
+                btn.innerText = originalText;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('buzonForm').reset();
+                document.getElementById('mensajeExito').classList.remove('hidden');
+                btn.classList.add('hidden'); // Ocultamos botón para evitar doble envío
+                
+                // Scroll suave al mensaje de éxito
+                document.getElementById('mensajeExito').scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>
