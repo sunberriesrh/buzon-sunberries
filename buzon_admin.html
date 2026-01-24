@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Buzón - Sun Berries</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sun: { green: '#006400', gold: '#fccb06', red: '#D32F2F', blue: '#1976D2' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+    <div id="login-screen" class="flex flex-col items-center justify-center min-h-screen bg-gray-200">
+        <img src="logo.png" alt="Sun Berries" class="h-28 mb-6 drop-shadow-lg">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl w-96 border-t-8 border-sun-gold">
+            <h2 class="text-2xl font-bold text-center text-sun-green mb-6">Acceso Buzón</h2>
+            <form id="loginForm" class="space-y-5">
+                <input type="email" id="email" placeholder="Correo" class="w-full p-3 border rounded-lg outline-none focus:border-sun-gold" required>
+                <input type="password" id="password" placeholder="Contraseña" class="w-full p-3 border rounded-lg outline-none focus:border-sun-gold" required>
+                <button type="submit" class="w-full bg-sun-green text-white font-bold py-3 rounded-lg hover:bg-green-800 transition">Entrar</button>
+            </form>
+            <p id="loginError" class="text-red-500 text-sm mt-4 hidden text-center"></p>
+        </div>
+    </div>
+
+    <div id="dashboard-screen" class="hidden pb-20">
+        
+        <nav class="bg-sun-green text-white shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+                    <div class="flex items-center gap-4">
+                        <img class="h-10 w-10 rounded-full bg-white p-1" src="logo.png" alt="Logo">
+                        <div>
+                            <h1 class="text-xl font-bold tracking-wide leading-none">Buzón Confidencial</h1>
+                            <span class="text-xs text-green-200 uppercase tracking-widest">Lectura y Seguimiento</span>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="text-sm bg-green-800 hover:bg-green-900 px-4 py-2 rounded-lg border border-green-700">Salir</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto p-6 space-y-8">
+            
+            <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-sun-gold flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div class="flex gap-2">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Desde</label>
+                        <input type="date" id="startDate" class="border p-2 rounded text-sm">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Hasta</label>
+                        <input type="date" id="endDate" class="border p-2 rounded text-sm">
+                    </div>
+                    <button onclick="loadData()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm self-end h-[38px]">Actualizar</button>
+                </div>
+                
+                <div class="w-full md:w-1/3 relative">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase">Buscar en mensajes</label>
+                    <input type="text" id="searchInput" onkeyup="filtrarTarjetas()" placeholder="Escribe 'comedor', 'sueldo'..." class="w-full border p-2 rounded text-sm pl-8 border-gray-300 focus:border-sun-gold outline-none">
+                    <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-[26px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="md:col-span-1 space-y-4">
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-200 shadow-sm flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-red-500 uppercase">Quejas</p>
+                            <h3 class="text-3xl font-extrabold text-red-700" id="countQuejas">0</h3>
+                        </div>
+                        <span class="text-2xl">⚠️</span>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 shadow-sm flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-yellow-600 uppercase">Sugerencias</p>
+                            <h3 class="text-3xl font-extrabold text-yellow-700" id="countSugerencias">0</h3>
+                        </div>
+                        <span class="text-2xl">💡</span>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-xl border border-green-200 shadow-sm flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-green-600 uppercase">Felicitaciones</p>
+                            <h3 class="text-3xl font-extrabold text-green-700" id="countFelicitaciones">0</h3>
+                        </div>
+                        <span class="text-2xl">👏</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-md md:col-span-1">
+                    <h4 class="text-xs font-bold text-gray-500 text-center mb-2 uppercase">Por Situación</h4>
+                    <div class="relative h-48"><canvas id="chartTipo"></canvas></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md md:col-span-2">
+                    <h4 class="text-xs font-bold text-gray-500 text-center mb-2 uppercase">Origen (Rancho)</h4>
+                    <div class="relative h-48"><canvas id="chartRancho"></canvas></div>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-xl font-bold text-gray-700 border-b-2 border-gray-200 pb-2 mb-4 flex justify-between items-center">
+                    <span>Mensajes Recientes</span>
+                    <span class="text-xs font-normal text-gray-500 bg-gray-200 px-2 py-1 rounded-full" id="totalMensajes">0 visibles</span>
+                </h2>
+                
+                <div id="feedbackWall" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN
+        const supabaseUrl = 'https://kqetrbmwznmlizibquus.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxZXRyYm13em5tbGl6aWJxdXVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MzkxOTMsImV4cCI6MjA4NDQxNTE5M30.G06gOQmC5034XLEdGwfQeir6AgcnZa-GVWh2xxXtrhc'
+        const adminClient = supabase.createClient(supabaseUrl, supabaseKey)
+        
+        let allData = []; // Guardaremos los datos aquí para el buscador local
+        const charts = {};
+
+        // AUTH
+        async function checkSession() {
+            const { data: { session } } = await adminClient.auth.getSession()
+            if (session) showDashboard()
+            else document.getElementById('login-screen').classList.remove('hidden')
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault()
+            const email = document.getElementById('email').value
+            const password = document.getElementById('password').value
+            const { error } = await adminClient.auth.signInWithPassword({ email, password })
+            if (error) {
+                document.getElementById('loginError').innerText = error.message
+                document.getElementById('loginError').classList.remove('hidden')
+            } else showDashboard()
+        })
+
+        async function logout() {
+            await adminClient.auth.signOut()
+            window.location.reload()
+        }
+
+        function showDashboard() {
+            document.getElementById('login-screen').classList.add('hidden')
+            document.getElementById('dashboard-screen').classList.remove('hidden')
+            
+            // Fechas default (últimos 30 días)
+            if(!document.getElementById('startDate').value) {
+                const date = new Date();
+                date.setDate(date.getDate() - 30);
+                document.getElementById('startDate').value = date.toISOString().split('T')[0];
+                document.getElementById('endDate').value = new Date().toISOString().split('T')[0];
+            }
+            loadData()
+        }
+
+        // DATA & RENDER
+        async function loadData() {
+            const start = document.getElementById('startDate').value
+            const end = document.getElementById('endDate').value + 'T23:59:59'
+
+            // IMPORTANTE: Consulta a la tabla 'buzon_quejas'
+            const { data, error } = await adminClient
+                .from('buzon_quejas')
+                .select('*')
+                .gte('created_at', start)
+                .lte('created_at', end)
+                .order('created_at', { ascending: false })
+
+            if (error) { alert('Error: ' + error.message); return; }
+            
+            allData = data; // Guardar para el buscador
+            updateKPIs(data);
+            renderCharts(data);
+            renderWall(data);
+        }
+
+        function updateKPIs(data) {
+            const quejas = data.filter(r => r.tipo_situacion === 'Queja').length;
+            const sugerencias = data.filter(r => r.tipo_situacion === 'Sugerencia').length;
+            const felis = data.filter(r => r.tipo_situacion === 'Felicitaciones').length;
+
+            document.getElementById('countQuejas').innerText = quejas;
+            document.getElementById('countSugerencias').innerText = sugerencias;
+            document.getElementById('countFelicitaciones').innerText = felis;
+            document.getElementById('totalMensajes').innerText = data.length + ' visibles';
+        }
+
+        function renderWall(data) {
+            const container = document.getElementById('feedbackWall');
+            container.innerHTML = '';
+
+            if(data.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 col-span-full text-center py-10">No hay mensajes en este periodo.</p>';
+                return;
+            }
+
+            data.forEach(item => {
+                // Definir estilos según el tipo
+                let borderClass = 'border-l-4 border-gray-300';
+                let bgHeader = 'bg-gray-50';
+                let icon = '📝';
+                
+                if (item.tipo_situacion === 'Queja') {
+                    borderClass = 'border-l-8 border-red-500';
+                    bgHeader = 'bg-red-50';
+                    icon = '⚠️';
+                } else if (item.tipo_situacion === 'Sugerencia') {
+                    borderClass = 'border-l-8 border-yellow-400';
+                    bgHeader = 'bg-yellow-50';
+                    icon = '💡';
+                } else if (item.tipo_situacion === 'Felicitaciones') {
+                    borderClass = 'border-l-8 border-green-500';
+                    bgHeader = 'bg-green-50';
+                    icon = '👏';
+                }
+
+                // Formatear fecha
+                const date = new Date(item.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
+
+                // Datos de contacto (o Anónimo)
+                let contactoHtml = `<span class="text-xs font-bold text-gray-400 italic">Anónimo</span>`;
+                if (item.nombre_completo || item.correo) {
+                    contactoHtml = `
+                        <div class="text-xs text-gray-600 mt-2 border-t pt-2 border-gray-100">
+                            ${item.nombre_completo ? `<p><strong>👤:</strong> ${item.nombre_completo}</p>` : ''}
+                            ${item.puesto ? `<p><strong>💼:</strong> ${item.puesto}</p>` : ''}
+                            ${item.correo ? `<p><strong>📧:</strong> ${item.correo}</p>` : ''}
+                        </div>
+                    `;
+                }
+
+                const card = `
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition duration-300 overflow-hidden flex flex-col ${borderClass}">
+                        <div class="p-3 ${bgHeader} flex justify-between items-center border-b border-gray-100">
+                            <span class="font-bold text-sm text-gray-700 flex items-center gap-2">${icon} ${item.tipo_situacion}</span>
+                            <span class="text-[10px] text-gray-500">${date}</span>
+                        </div>
+                        <div class="p-4 flex-1">
+                            <p class="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">"${item.mensaje}"</p>
+                        </div>
+                        <div class="p-3 bg-gray-50 border-t border-gray-100">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-bold text-sun-green bg-green-100 px-2 py-1 rounded-full">${item.rancho}</span>
+                            </div>
+                            ${contactoHtml}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        // BUSCADOR EN TIEMPO REAL
+        function filtrarTarjetas() {
+            const texto = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtrados = allData.filter(item => {
+                const mensaje = (item.mensaje || '').toLowerCase();
+                const rancho = (item.rancho || '').toLowerCase();
+                const tipo = (item.tipo_situacion || '').toLowerCase();
+                return mensaje.includes(texto) || rancho.includes(texto) || tipo.includes(texto);
+            });
+            
+            renderWall(filtrados);
+            document.getElementById('totalMensajes').innerText = filtrados.length + ' encontrados';
+        }
+
+        // GRÁFICAS
+        function renderCharts(data) {
+            const count = (field) => data.reduce((acc, curr) => {
+                const val = curr[field] || 'N/A';
+                acc[val] = (acc[val] || 0) + 1;
+                return acc;
+            }, {});
+
+            createChart('chartTipo', 'doughnut', count('tipo_situacion'), ['#D32F2F', '#FBC02D', '#2E7D32']); // Rojo, Amarillo, Verde
+            
+            // Colores variados para ranchos
+            const paleta = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#8AC249'];
+            createChart('chartRancho', 'bar', count('rancho'), paleta, { indexAxis: 'y' });
+        }
+
+        function createChart(id, type, dataObj, colors, opts={}) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (charts[id]) charts[id].destroy();
+            
+            const labels = Object.keys(dataObj);
+            const values = Object.values(dataObj);
+            const bg = typeof colors === 'string' ? Array(labels.length).fill(colors) : colors;
+
+            charts[id] = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{ data: values, backgroundColor: bg, borderWidth: 1 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: type === 'doughnut', position: 'right', labels: {boxWidth: 10} } },
+                    ...opts
+                }
+            });
+        }
+
+        checkSession();
+    </script>
+</body>
+</html>
