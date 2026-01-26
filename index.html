@@ -98,12 +98,9 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <div class="md:col-span-2 text-sm text-gray-500 italic mb-1 text-center">
-                    Tus datos son opcionales si prefieres anonimato.
-                </div>
                 <div>
-                    <label class="block font-bold text-gray-700 mb-1">Nombre Completo</label>
-                    <input type="text" name="nombre_completo" class="w-full rounded-lg border-gray-300 p-2 border focus:border-sun-green outline-none" placeholder="Opcional">
+                    <label class="block font-bold text-gray-700 mb-1">Nombre Completo <span class="text-red-500">*</span></label>
+                    <input type="text" name="nombre_completo" required class="w-full rounded-lg border-gray-300 p-2 border focus:border-sun-green outline-none" placeholder="Escribe tu nombre">
                 </div>
                 <div>
                     <label class="block font-bold text-gray-700 mb-1">Correo Electrónico</label>
@@ -191,13 +188,10 @@
             } else {
                 document.getElementById('buzonForm').reset();
                 document.getElementById('mensajeExito').classList.remove('hidden');
-                btn.classList.add('hidden'); // Ocultamos botón para evitar doble envío
-                
-                // Scroll suave al mensaje de éxito
+                btn.classList.add('hidden'); 
                 document.getElementById('mensajeExito').scrollIntoView({ behavior: 'smooth' });
             }
         });
     </script>
 </body>
-
 </html>
