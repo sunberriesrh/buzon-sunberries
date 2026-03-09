@@ -447,7 +447,8 @@
             const { error } = await adminClient.auth.signInWithPassword({ email, password })
             if (error) {
                 const el = document.getElementById('loginError');
-                el.innerText = error.message;
+                console.error('Error de login:', error);
+                el.innerText = 'Correo o contraseña incorrectos.';
                 el.classList.remove('hidden');
             } else showDashboard()
         })
@@ -489,7 +490,7 @@
                 .lte('created_at', end)
                 .order('created_at', { ascending: false })
 
-            if (error) { alert('Error: ' + error.message); return; }
+            if (error) { console.error('Error cargando datos:', error); alert('No se pudieron cargar los datos. Verifica tu conexión e intenta de nuevo.'); return; }
 
             allData = data;
             applyFilters();
@@ -659,7 +660,8 @@
                 .eq('id', id);
 
             if (error) {
-                alert('Error al cambiar estado: ' + error.message);
+                console.error('Error al cambiar estado:', error);
+                alert('No se pudo actualizar el estado. Intenta de nuevo.');
                 return;
             }
 
@@ -791,7 +793,8 @@
             const { error } = await adminClient.auth.updateUser({ password: newPass });
 
             if (error) {
-                errorEl.innerText = '❌ Error: ' + error.message;
+                errorEl.innerText = 'No se pudo cambiar la contraseña. Intenta de nuevo.';
+                console.error('Error cambiando contraseña:', error);
                 errorEl.classList.remove('hidden');
                 btn.disabled = false;
                 btn.innerText = 'Guardar';

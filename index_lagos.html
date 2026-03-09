@@ -337,7 +337,8 @@
                     Enviar otro mensaje
                 </button>
                 <p id="cooldownMsg" class="text-sm text-gray-400 hidden cooldown-pulse">⏳ Podrás enviar otro mensaje en
-                    <span id="cooldownTimer">60</span>s</p>
+                    <span id="cooldownTimer">60</span>s
+                </p>
             </div>
         </div>
 
@@ -522,7 +523,8 @@
                 .insert([dataObj]);
 
             if (error) {
-                alert('Error al enviar: ' + error.message);
+                console.error('Error al enviar:', error);
+                alert('Ocurrió un problema al enviar tu mensaje. Por favor intenta de nuevo más tarde.');
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
                 btn.classList.remove('opacity-60', 'cursor-not-allowed');
