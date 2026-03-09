@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Buzón Lagos - Sun Berries</title>
+    <meta name="description" content="Panel de administración del Buzón de Quejas y Sugerencias de Sun Berries Lagos.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        sun: { green: '#006400', gold: '#fccb06', red: '#D32F2F', blue: '#1976D2' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .card-enter {
+            animation: cardIn 0.3s ease-out forwards;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .estado-badge {
+            transition: all 0.2s ease;
+        }
+
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark mode overrides */
+        .dark {
+            color-scheme: dark;
+        }
+
+        .dark body {
+            background-color: #0f172a;
+        }
+
+        .dark .bg-white {
+            background-color: #1e293b;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #0f172a;
+        }
+
+        .dark .bg-gray-200 {
+            background-color: #1e293b;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #334155;
+        }
+
+        .dark .text-gray-800 {
+            color: #e2e8f0;
+        }
+
+        .dark .text-gray-700 {
+            color: #cbd5e1;
+        }
+
+        .dark .text-gray-600 {
+            color: #94a3b8;
+        }
+
+        .dark .text-gray-500 {
+            color: #64748b;
+        }
+
+        .dark .text-gray-400 {
+            color: #64748b;
+        }
+
+        .dark .border-gray-200 {
+            border-color: #334155;
+        }
+
+        .dark .border-gray-100 {
+            border-color: #334155;
+        }
+
+        .dark .border-gray-300 {
+            border-color: #475569;
+        }
+
+        .dark .shadow-md {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark input,
+        .dark select {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-color: #475569;
+        }
+
+        @media print {
+
+            nav,
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+    <!-- ==================== LOGIN SCREEN ==================== -->
+    <div id="login-screen"
+        class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <img src="logo.png" alt="Sun Berries" class="h-28 mb-6 drop-shadow-lg">
+        <div class="bg-white dark:bg-slate-800 p-10 rounded-3xl shadow-2xl w-96 border-t-[6px] border-sun-gold">
+            <h2 class="text-2xl font-extrabold text-center text-sun-green mb-2">Acceso Buzón</h2>
+            <p class="text-center text-sm text-gray-500 mb-6">Lagos</p>
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label
+                        class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Correo</label>
+                    <input type="email" id="email" placeholder="admin@sunberries.com"
+                        class="w-full p-3 border rounded-lg outline-none focus:border-sun-gold focus:ring-2 focus:ring-sun-gold/20 transition dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        required>
+                </div>
+                <div>
+                    <label
+                        class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Contraseña</label>
+                    <input type="password" id="password" placeholder="••••••••"
+                        class="w-full p-3 border rounded-lg outline-none focus:border-sun-gold focus:ring-2 focus:ring-sun-gold/20 transition dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                        required>
+                </div>
+                <button type="submit"
+                    class="w-full bg-sun-green text-white font-bold py-3 rounded-xl hover:bg-green-800 transition transform hover:-translate-y-0.5 shadow-lg">Entrar</button>
+            </form>
+            <p id="loginError" class="text-red-500 text-sm mt-4 hidden text-center font-medium"></p>
+        </div>
+    </div>
+
+    <!-- ==================== DASHBOARD SCREEN ==================== -->
+    <div id="dashboard-screen" class="hidden pb-20">
+
+        <!-- NAV -->
+        <nav class="bg-gradient-to-r from-sun-green to-emerald-700 text-white shadow-xl sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16 md:h-20">
+                    <div class="flex items-center gap-3">
+                        <img class="h-9 w-9 rounded-full bg-white p-0.5 shadow" src="logo.png" alt="Logo">
+                        <div>
+                            <h1 class="text-lg md:text-xl font-extrabold tracking-wide leading-none">Buzón Confidencial
+                                — Lagos</h1>
+                            <span class="text-[10px] text-green-200 uppercase tracking-widest">Lectura y
+                                Seguimiento</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openPasswordModal()"
+                            class="p-2 rounded-lg bg-green-800/50 hover:bg-green-900 transition text-lg"
+                            title="Cambiar contraseña">🔑</button>
+                        <button id="darkToggle" onclick="toggleDarkMode()"
+                            class="p-2 rounded-lg bg-green-800/50 hover:bg-green-900 transition text-lg"
+                            title="Modo oscuro">🌙</button>
+                        <button onclick="logout()"
+                            class="text-sm bg-green-800/50 hover:bg-green-900 px-4 py-2 rounded-lg border border-green-600/50 transition font-medium">Salir</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+
+            <!-- ========== TOOLBAR ========== -->
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-sun-gold no-print">
+                <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-end">
+                    <!-- Date filters -->
+                    <div class="flex flex-wrap gap-3 items-end">
+                        <div>
+                            <label
+                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Desde</label>
+                            <input type="date" id="startDate"
+                                class="border p-2 rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600">
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Hasta</label>
+                            <input type="date" id="endDate"
+                                class="border p-2 rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600">
+                        </div>
+                        <button onclick="loadData()"
+                            class="bg-sun-green text-white px-4 py-2 rounded-lg hover:bg-green-800 text-sm font-bold transition h-[38px] shadow">🔄
+                            Actualizar</button>
+                    </div>
+
+                    <!-- Dropdown filters -->
+                    <div class="flex flex-wrap gap-3 items-end">
+                        <div>
+                            <label
+                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Área</label>
+                            <select id="filterRancho" onchange="applyFilters()"
+                                class="border p-2 rounded-lg text-sm min-w-[140px] dark:bg-slate-700 dark:border-slate-600">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Tipo</label>
+                            <select id="filterTipo" onchange="applyFilters()"
+                                class="border p-2 rounded-lg text-sm min-w-[130px] dark:bg-slate-700 dark:border-slate-600">
+                                <option value="">Todos</option>
+                                <option value="Queja">⚠️ Quejas</option>
+                                <option value="Sugerencia">💡 Sugerencias</option>
+                                <option value="Felicitaciones">👏 Felicitaciones</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Estado</label>
+                            <select id="filterEstado" onchange="applyFilters()"
+                                class="border p-2 rounded-lg text-sm min-w-[130px] dark:bg-slate-700 dark:border-slate-600">
+                                <option value="">Todos</option>
+                                <option value="Nuevo">🆕 Nuevo</option>
+                                <option value="En proceso">🔄 En proceso</option>
+                                <option value="Resuelto">✅ Resuelto</option>
+                                <option value="Descartado">❌ Descartado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Search + Export -->
+                    <div class="flex flex-wrap gap-3 items-end">
+                        <div class="relative">
+                            <label
+                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Buscar</label>
+                            <input type="text" id="searchInput" onkeyup="applyFilters()"
+                                placeholder="Escribe para buscar..."
+                                class="border p-2 rounded-lg text-sm pl-8 min-w-[180px] dark:bg-slate-700 dark:border-slate-600">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-2.5 bottom-2.5" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <button onclick="exportCSV()"
+                            class="bg-sun-gold text-gray-900 px-4 py-2 rounded-lg hover:bg-yellow-500 text-sm font-bold transition h-[38px] shadow flex items-center gap-1">
+                            📥 CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== KPIs + CHARTS ========== -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="stat-card bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-red-500 cursor-pointer"
+                    onclick="quickFilter('Queja')">
+                    <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider">Quejas</p>
+                    <h3 class="text-3xl font-black text-red-700 dark:text-red-400 mt-1" id="countQuejas">0</h3>
+                </div>
+                <div class="stat-card bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-yellow-400 cursor-pointer"
+                    onclick="quickFilter('Sugerencia')">
+                    <p class="text-[10px] font-bold text-yellow-600 uppercase tracking-wider">Sugerencias</p>
+                    <h3 class="text-3xl font-black text-yellow-700 dark:text-yellow-400 mt-1" id="countSugerencias">0
+                    </h3>
+                </div>
+                <div class="stat-card bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-green-500 cursor-pointer"
+                    onclick="quickFilter('Felicitaciones')">
+                    <p class="text-[10px] font-bold text-green-600 uppercase tracking-wider">Felicitaciones</p>
+                    <h3 class="text-3xl font-black text-green-700 dark:text-green-400 mt-1" id="countFelicitaciones">0
+                    </h3>
+                </div>
+                <div class="stat-card bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-blue-500">
+                    <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Total</p>
+                    <h3 class="text-3xl font-black text-blue-700 dark:text-blue-400 mt-1" id="countTotal">0</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md">
+                    <h4
+                        class="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center mb-2 uppercase tracking-wider">
+                        Por Situación</h4>
+                    <div class="relative h-48"><canvas id="chartTipo"></canvas></div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md md:col-span-2">
+                    <h4
+                        class="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center mb-2 uppercase tracking-wider">
+                        Origen (Área)</h4>
+                    <div class="relative h-48"><canvas id="chartRancho"></canvas></div>
+                </div>
+            </div>
+
+            <!-- ========== MESSAGES WALL ========== -->
+            <div>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                    <h2 class="text-xl font-extrabold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                        📋 Mensajes
+                        <span
+                            class="text-xs font-normal text-gray-500 bg-gray-200 dark:bg-slate-700 px-3 py-1 rounded-full"
+                            id="totalMensajes">0 visibles</span>
+                    </h2>
+                    <div id="paginationControls" class="flex items-center gap-2 text-sm no-print">
+                        <button onclick="changePage(-1)" id="btnPrev"
+                            class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40"
+                            disabled>← Ant</button>
+                        <span id="pageInfo" class="text-gray-500 dark:text-gray-400 font-medium">1 / 1</span>
+                        <button onclick="changePage(1)" id="btnNext"
+                            class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40"
+                            disabled>Sig →</button>
+                    </div>
+                </div>
+
+                <div id="feedbackWall" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                </div>
+
+                <div id="paginationBottom" class="flex justify-center items-center gap-2 mt-6 text-sm no-print">
+                    <button onclick="changePage(-1)"
+                        class="btnPrevBot px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40"
+                        disabled>← Anterior</button>
+                    <span id="pageInfoBot" class="text-gray-500 dark:text-gray-400 font-medium">1 / 1</span>
+                    <button onclick="changePage(1)"
+                        class="btnNextBot px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40"
+                        disabled>Siguiente →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL CAMBIAR CONTRASEÑA ==================== -->
+    <div id="passwordModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center">
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePasswordModal()"></div>
+        <!-- Modal -->
+        <div
+            class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border-t-4 border-sun-gold">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-5">
+                    <h3 class="text-xl font-extrabold text-gray-800 dark:text-gray-100">🔑 Cambiar Contraseña</h3>
+                    <button onclick="closePasswordModal()"
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none">&times;</button>
+                </div>
+                <form id="passwordForm" class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Nueva
+                            contraseña</label>
+                        <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" minlength="6" required
+                            class="w-full p-3 border rounded-lg outline-none focus:border-sun-gold focus:ring-2 focus:ring-sun-gold/20 transition dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Confirmar
+                            contraseña</label>
+                        <input type="password" id="confirmPassword" placeholder="Repite la contraseña" minlength="6"
+                            required
+                            class="w-full p-3 border rounded-lg outline-none focus:border-sun-gold focus:ring-2 focus:ring-sun-gold/20 transition dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                    </div>
+                    <p id="passwordError" class="text-red-500 text-sm hidden font-medium"></p>
+                    <p id="passwordSuccess" class="text-green-600 text-sm hidden font-medium"></p>
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" onclick="closePasswordModal()"
+                            class="flex-1 py-3 rounded-xl border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-100 dark:hover:bg-slate-700 transition">Cancelar</button>
+                        <button type="submit" id="btnChangePass"
+                            class="flex-1 py-3 rounded-xl bg-sun-green text-white font-bold hover:bg-green-800 transition shadow-lg">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===================== CONFIGURACIÓN =====================
+        const supabaseUrl = 'https://kqetrbmwznmlizibquus.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxZXRyYm13em5tbGl6aWJxdXVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MzkxOTMsImV4cCI6MjA4NDQxNTE5M30.G06gOQmC5034XLEdGwfQeir6AgcnZa-GVWh2xxXtrhc'
+        const adminClient = supabase.createClient(supabaseUrl, supabaseKey)
+
+        // *** TABLA DIFERENTE: buzon_quejas_lagos ***
+        const TABLE_NAME = 'buzon_quejas_lagos';
+
+        let allData = [];
+        let filteredData = [];
+        const charts = {};
+
+        const PAGE_SIZE = 20;
+        let currentPage = 1;
+        let totalPages = 1;
+
+        const ESTADOS = {
+            'Nuevo': { color: 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/50 dark:text-blue-300', icon: '🆕' },
+            'En proceso': { color: 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-300', icon: '🔄' },
+            'Resuelto': { color: 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/50 dark:text-green-300', icon: '✅' },
+            'Descartado': { color: 'bg-gray-200 text-gray-600 border-gray-300 dark:bg-gray-700 dark:text-gray-400', icon: '❌' }
+        };
+
+        // *** ÁREAS DE LAGOS ***
+        const ranchos = ['Lagos 1', 'Lagos 2', 'Lagos 3', 'Cooler', 'Administrativos'];
+
+        // ===================== DARK MODE =====================
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('buzon_lagos_dark_mode', isDark ? '1' : '0');
+            document.getElementById('darkToggle').innerText = isDark ? '☀️' : '🌙';
+            if (allData.length) renderCharts(allData);
+        }
+
+        function initDarkMode() {
+            if (localStorage.getItem('buzon_lagos_dark_mode') === '1') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkToggle').innerText = '☀️';
+            }
+        }
+
+        // ===================== AUTH =====================
+        async function checkSession() {
+            const { data: { session } } = await adminClient.auth.getSession()
+            if (session) showDashboard()
+            else document.getElementById('login-screen').classList.remove('hidden')
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault()
+            const email = document.getElementById('email').value
+            const password = document.getElementById('password').value
+            const { error } = await adminClient.auth.signInWithPassword({ email, password })
+            if (error) {
+                const el = document.getElementById('loginError');
+                el.innerText = error.message;
+                el.classList.remove('hidden');
+            } else showDashboard()
+        })
+
+        async function logout() {
+            await adminClient.auth.signOut()
+            window.location.reload()
+        }
+
+        function showDashboard() {
+            document.getElementById('login-screen').classList.add('hidden')
+            document.getElementById('dashboard-screen').classList.remove('hidden')
+
+            if (!document.getElementById('startDate').value) {
+                const d = new Date();
+                d.setDate(d.getDate() - 30);
+                document.getElementById('startDate').value = d.toISOString().split('T')[0];
+                document.getElementById('endDate').value = new Date().toISOString().split('T')[0];
+            }
+            const sel = document.getElementById('filterRancho');
+            ranchos.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r; opt.textContent = r;
+                sel.appendChild(opt);
+            });
+
+            loadData();
+        }
+
+        // ===================== DATA & RENDER =====================
+        async function loadData() {
+            const start = document.getElementById('startDate').value
+            const end = document.getElementById('endDate').value + 'T23:59:59'
+
+            const { data, error } = await adminClient
+                .from(TABLE_NAME)
+                .select('*')
+                .gte('created_at', start)
+                .lte('created_at', end)
+                .order('created_at', { ascending: false })
+
+            if (error) { alert('Error: ' + error.message); return; }
+
+            allData = data;
+            applyFilters();
+            updateKPIs(data);
+            renderCharts(data);
+        }
+
+        // ===================== FILTERS =====================
+        function applyFilters() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const filterRancho = document.getElementById('filterRancho').value;
+            const filterTipo = document.getElementById('filterTipo').value;
+            const filterEstado = document.getElementById('filterEstado').value;
+
+            filteredData = allData.filter(item => {
+                const matchSearch = !searchText ||
+                    (item.mensaje || '').toLowerCase().includes(searchText) ||
+                    (item.rancho || '').toLowerCase().includes(searchText) ||
+                    (item.tipo_situacion || '').toLowerCase().includes(searchText) ||
+                    (item.nombre_completo || '').toLowerCase().includes(searchText) ||
+                    (item.folio || '').toLowerCase().includes(searchText);
+
+                const matchRancho = !filterRancho || item.rancho === filterRancho;
+                const matchTipo = !filterTipo || item.tipo_situacion === filterTipo;
+                const matchEstado = !filterEstado || (item.estado || 'Nuevo') === filterEstado;
+
+                return matchSearch && matchRancho && matchTipo && matchEstado;
+            });
+
+            currentPage = 1;
+            totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+            renderPage();
+        }
+
+        function quickFilter(tipo) {
+            document.getElementById('filterTipo').value = tipo;
+            applyFilters();
+        }
+
+        // ===================== PAGINATION =====================
+        function renderPage() {
+            const startIdx = (currentPage - 1) * PAGE_SIZE;
+            const endIdx = startIdx + PAGE_SIZE;
+            const pageData = filteredData.slice(startIdx, endIdx);
+
+            renderWall(pageData);
+            updatePagination();
+            document.getElementById('totalMensajes').innerText = filteredData.length + ' encontrados';
+        }
+
+        function changePage(dir) {
+            currentPage += dir;
+            currentPage = Math.max(1, Math.min(currentPage, totalPages));
+            renderPage();
+            document.getElementById('feedbackWall').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function updatePagination() {
+            const info = `${currentPage} / ${totalPages}`;
+            document.getElementById('pageInfo').innerText = info;
+            document.getElementById('pageInfoBot').innerText = info;
+
+            document.getElementById('btnPrev').disabled = currentPage <= 1;
+            document.getElementById('btnNext').disabled = currentPage >= totalPages;
+            document.querySelectorAll('.btnPrevBot').forEach(b => b.disabled = currentPage <= 1);
+            document.querySelectorAll('.btnNextBot').forEach(b => b.disabled = currentPage >= totalPages);
+
+            const show = totalPages > 1;
+            document.getElementById('paginationControls').style.display = show ? 'flex' : 'none';
+            document.getElementById('paginationBottom').style.display = show ? 'flex' : 'none';
+        }
+
+        // ===================== KPIs =====================
+        function updateKPIs(data) {
+            const quejas = data.filter(r => r.tipo_situacion === 'Queja').length;
+            const sugerencias = data.filter(r => r.tipo_situacion === 'Sugerencia').length;
+            const felis = data.filter(r => r.tipo_situacion === 'Felicitaciones').length;
+
+            document.getElementById('countQuejas').innerText = quejas;
+            document.getElementById('countSugerencias').innerText = sugerencias;
+            document.getElementById('countFelicitaciones').innerText = felis;
+            document.getElementById('countTotal').innerText = data.length;
+        }
+
+        // ===================== RENDER CARDS =====================
+        function renderWall(data) {
+            const container = document.getElementById('feedbackWall');
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 col-span-full text-center py-16 text-lg">No hay mensajes que coincidan con los filtros.</p>';
+                return;
+            }
+
+            data.forEach((item, idx) => {
+                let borderClass = 'border-l-[6px] border-gray-300';
+                let bgHeader = 'bg-gray-50 dark:bg-slate-700';
+                let icon = '📝';
+
+                if (item.tipo_situacion === 'Queja') {
+                    borderClass = 'border-l-[6px] border-red-500';
+                    bgHeader = 'bg-red-50 dark:bg-red-900/30';
+                    icon = '⚠️';
+                } else if (item.tipo_situacion === 'Sugerencia') {
+                    borderClass = 'border-l-[6px] border-yellow-400';
+                    bgHeader = 'bg-yellow-50 dark:bg-yellow-900/30';
+                    icon = '💡';
+                } else if (item.tipo_situacion === 'Felicitaciones') {
+                    borderClass = 'border-l-[6px] border-green-500';
+                    bgHeader = 'bg-green-50 dark:bg-green-900/30';
+                    icon = '👏';
+                }
+
+                const date = new Date(item.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                const estado = item.estado || 'Nuevo';
+                const estadoConfig = ESTADOS[estado] || ESTADOS['Nuevo'];
+
+                let contactoHtml = `<span class="text-xs font-bold text-gray-400 italic">Anónimo</span>`;
+                if (item.nombre_completo || item.correo) {
+                    contactoHtml = `
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-2 border-t pt-2 border-gray-100 dark:border-slate-600 space-y-0.5">
+                            ${item.nombre_completo ? `<p><strong>👤</strong> ${item.nombre_completo}</p>` : ''}
+                            ${item.puesto ? `<p><strong>💼</strong> ${item.puesto}</p>` : ''}
+                            ${item.correo ? `<p><strong>📧</strong> ${item.correo}</p>` : ''}
+                        </div>
+                    `;
+                }
+
+                const folioHtml = item.folio ? `<span class="text-[10px] text-gray-400 font-mono">${item.folio}</span>` : '';
+
+                const card = document.createElement('div');
+                card.className = `card-enter bg-white dark:bg-slate-800 rounded-xl shadow hover:shadow-xl transition duration-300 overflow-hidden flex flex-col ${borderClass}`;
+                card.style.animationDelay = `${idx * 0.05}s`;
+
+                card.innerHTML = `
+                    <div class="p-3 ${bgHeader} flex justify-between items-center border-b border-gray-100 dark:border-slate-600">
+                        <span class="font-bold text-sm text-gray-700 dark:text-gray-200 flex items-center gap-2">${icon} ${item.tipo_situacion}</span>
+                        <span class="text-[10px] text-gray-500 dark:text-gray-400">${date}</span>
+                    </div>
+                    <div class="p-4 flex-1">
+                        <p class="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap leading-relaxed">"${item.mensaje}"</p>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-slate-700/50 border-t border-gray-100 dark:border-slate-600 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-sun-green bg-green-100 dark:bg-green-900/50 px-2 py-1 rounded-full">🏢 ${item.rancho}</span>
+                            ${folioHtml}
+                        </div>
+                        ${contactoHtml}
+                        <div class="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-slate-600">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase">Estado:</span>
+                            <select onchange="changeEstado('${item.id}', this.value)" class="text-xs font-bold py-1 px-2 rounded-full border estado-badge ${estadoConfig.color} cursor-pointer outline-none">
+                                ${Object.keys(ESTADOS).map(e => `<option value="${e}" ${e === estado ? 'selected' : ''}>${ESTADOS[e].icon} ${e}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ===================== CHANGE ESTADO =====================
+        async function changeEstado(id, newEstado) {
+            const { error } = await adminClient
+                .from(TABLE_NAME)
+                .update({ estado: newEstado })
+                .eq('id', id);
+
+            if (error) {
+                alert('Error al cambiar estado: ' + error.message);
+                return;
+            }
+
+            const item = allData.find(d => d.id == id);
+            if (item) item.estado = newEstado;
+        }
+
+        // ===================== EXPORT CSV =====================
+        function exportCSV() {
+            if (filteredData.length === 0) {
+                alert('No hay datos para exportar.');
+                return;
+            }
+
+            const headers = ['Folio', 'Fecha', 'Área', 'Tipo', 'Mensaje', 'Nombre', 'Puesto', 'Correo', 'Estado'];
+            const rows = filteredData.map(item => [
+                item.folio || 'N/A',
+                new Date(item.created_at).toLocaleDateString('es-MX'),
+                item.rancho || '',
+                item.tipo_situacion || '',
+                `"${(item.mensaje || '').replace(/"/g, '""')}"`,
+                item.nombre_completo || '',
+                item.puesto || '',
+                item.correo || '',
+                item.estado || 'Nuevo'
+            ]);
+
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `buzon_lagos_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ===================== CHARTS =====================
+        function renderCharts(data) {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#6b7280';
+            const gridColor = isDark ? '#334155' : '#e5e7eb';
+
+            const count = (field) => data.reduce((acc, curr) => {
+                const val = curr[field] || 'N/A';
+                acc[val] = (acc[val] || 0) + 1;
+                return acc;
+            }, {});
+
+            createChart('chartTipo', 'doughnut', count('tipo_situacion'), ['#D32F2F', '#FBC02D', '#2E7D32'], {
+                plugins: { legend: { display: true, position: 'right', labels: { boxWidth: 12, color: textColor, font: { size: 11 } } } }
+            });
+
+            const paleta = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'];
+            createChart('chartRancho', 'bar', count('rancho'), paleta, {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                    y: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }
+                }
+            });
+        }
+
+        function createChart(id, type, dataObj, colors, opts = {}) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (charts[id]) charts[id].destroy();
+
+            const labels = Object.keys(dataObj);
+            const values = Object.values(dataObj);
+            const bg = Array.isArray(colors) ? colors : Array(labels.length).fill(colors);
+
+            charts[id] = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{ data: values, backgroundColor: bg, borderWidth: 0, borderRadius: type === 'bar' ? 4 : 0 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...opts
+                }
+            });
+        }
+
+        // ===================== CHANGE PASSWORD =====================
+        function openPasswordModal() {
+            document.getElementById('passwordModal').classList.remove('hidden');
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('passwordError').classList.add('hidden');
+            document.getElementById('passwordSuccess').classList.add('hidden');
+            document.getElementById('btnChangePass').disabled = false;
+            document.getElementById('btnChangePass').innerText = 'Guardar';
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.add('hidden');
+        }
+
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+            const errorEl = document.getElementById('passwordError');
+            const successEl = document.getElementById('passwordSuccess');
+            const btn = document.getElementById('btnChangePass');
+
+            errorEl.classList.add('hidden');
+            successEl.classList.add('hidden');
+
+            // Validate
+            if (newPass.length < 6) {
+                errorEl.innerText = '⚠ La contraseña debe tener al menos 6 caracteres.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            if (newPass !== confirmPass) {
+                errorEl.innerText = '⚠ Las contraseñas no coinciden.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            // Update password
+            btn.disabled = true;
+            btn.innerText = 'Guardando...';
+
+            const { error } = await adminClient.auth.updateUser({ password: newPass });
+
+            if (error) {
+                errorEl.innerText = '❌ Error: ' + error.message;
+                errorEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerText = 'Guardar';
+            } else {
+                successEl.innerText = '✅ Contraseña actualizada correctamente.';
+                successEl.classList.remove('hidden');
+                btn.innerText = '¡Listo!';
+                // Close modal after 2 seconds
+                setTimeout(() => closePasswordModal(), 2000);
+            }
+        });
+
+        // ===================== INIT =====================
+        initDarkMode();
+        checkSession();
+    </script>
+</body>
+
+</html>
