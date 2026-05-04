@@ -43,7 +43,7 @@
                 return;
             }
             // Assuming there is a column called 'estatus' – if not, display the whole record.
-            const estatus = (data.estatus && data.estatus.trim()) ? data.estatus.trim() : (data.status && data.status.trim()) ? data.status.trim() : 'Pendiente';
+            const estatus = (data.estado && data.estado.trim()) ? data.estado.trim() : 'Pendiente';
             const detalle = data.mensaje || '';
             statusDiv.innerHTML = `
                 <div class="p-6 bg-white rounded-xl shadow-md">
