@@ -69,7 +69,7 @@
                     const tipo = entry.tipo || '';
                     const descripcion = entry.descripcion || '';
                     entryDiv.innerHTML = `
-                        <p class="text-sm text-gray-500 mb-1">${fecha}</p>
+                        <p class="text-sm text-gray-500 mb-1"><strong>Seguimiento</strong> - <strong>Fecha:</strong> ${fecha}</p>
                         <p class="font-semibold">Tipo: <span class="text-blue-600">${tipo}</span></p>
                         ${descripcion ? `<p class="mt-1">${descripcion}</p>` : ''}
                     `;
