@@ -42,32 +42,36 @@
                 statusDiv.innerHTML = `<p class="text-red-600">No se encontró el folio <span class="font-bold">${folio}</span>. Verifica que el número sea correcto.</p>`;
                 return;
             }
-            // Assuming there is a column called 'estatus' – if not, display the whole record.
+            // The real status is stored in column 'estado'
             const estatus = (data.estado && data.estado.trim()) ? data.estado.trim() : 'Pendiente';
             const detalle = data.mensaje || '';
+            // Keep the primary record id for fetching its follow‑up entries
+            const buzonId = data.id;
             statusDiv.innerHTML = `
                 <div class="p-6 bg-white rounded-xl shadow-md">
                     <h2 class="text-2xl font-bold text-sun-green mb-4">Estado del Folio ${folio}</h2>
                     <p class="mb-2"><span class="font-semibold">Estatus:</span> <span class="text-blue-600">${estatus}</span></p>
                     ${detalle ? `<p class="mb-2"><span class="font-semibold">Mensaje:</span> ${detalle}</p>` : ''}
                 </div>`;
-            // Render historial from buzon_seguimientos table
+            // Fetch historial entries linked to this queja (buzon_seguimientos)
             const { data: histData, error: histError } = await clienteSupabase
                 .from('buzon_seguimientos')
                 .select('*')
-                .eq('folio', folio)
-                .order('fecha', { ascending: true });
+                .eq('buzon_id', buzonId)
+                .order('created_at', { ascending: true });
             if (!histError && Array.isArray(histData) && histData.length) {
                 const historyContainer = document.createElement('div');
                 historyContainer.className = 'mt-4 space-y-4';
                 histData.forEach(entry => {
                     const entryDiv = document.createElement('div');
                     entryDiv.className = 'p-4 border border-gray-200 rounded-lg bg-gray-50';
-                    const fecha = entry.fecha ? new Date(entry.fecha).toLocaleString() : '';
+                    const fecha = entry.created_at ? new Date(entry.created_at).toLocaleString() : '';
+                    const tipo = entry.tipo || '';
+                    const descripcion = entry.descripcion || '';
                     entryDiv.innerHTML = `
                         <p class="text-sm text-gray-500 mb-1">${fecha}</p>
-                        <p class="font-semibold">Estatus: <span class="text-blue-600">${entry.estatus || ''}</span></p>
-                        ${entry.comentario ? `<p class="mt-1">${entry.comentario}</p>` : ''}
+                        <p class="font-semibold">Tipo: <span class="text-blue-600">${tipo}</span></p>
+                        ${descripcion ? `<p class="mt-1">${descripcion}</p>` : ''}
                     `;
                     historyContainer.appendChild(entryDiv);
                 });
