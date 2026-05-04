@@ -549,6 +549,8 @@
                 document.getElementById('successScreen').scrollIntoView({ behavior: 'smooth' });
                 launchConfetti();
                 startCooldown();
+                // Send WhatsApp link
+                sendWhatsAppLink(folio, dataObj.telefono);
             }
         });
 
