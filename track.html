@@ -51,11 +51,16 @@
                     <p class="mb-2"><span class="font-semibold">Estatus:</span> <span class="text-blue-600">${estatus}</span></p>
                     ${detalle ? `<p class="mb-2"><span class="font-semibold">Mensaje:</span> ${detalle}</p>` : ''}
                 </div>`;
-            // Render historial if present
-            if (Array.isArray(data.historial) && data.historial.length) {
+            // Render historial from buzon_seguimientos table
+            const { data: histData, error: histError } = await clienteSupabase
+                .from('buzon_seguimientos')
+                .select('*')
+                .eq('folio', folio)
+                .order('fecha', { ascending: true });
+            if (!histError && Array.isArray(histData) && histData.length) {
                 const historyContainer = document.createElement('div');
                 historyContainer.className = 'mt-4 space-y-4';
-                data.historial.forEach(entry => {
+                histData.forEach(entry => {
                     const entryDiv = document.createElement('div');
                     entryDiv.className = 'p-4 border border-gray-200 rounded-lg bg-gray-50';
                     const fecha = entry.fecha ? new Date(entry.fecha).toLocaleString() : '';
