@@ -117,10 +117,25 @@
         }
 
         .dark input,
-        .dark select {
+        .dark select,
+        .dark textarea {
             background-color: #1e293b;
             color: #e2e8f0;
             border-color: #475569;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #475569;
         }
 
         /* Print styles for export */
@@ -196,159 +211,91 @@
 
         <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
 
-            <!-- ========== TOOLBAR ========== -->
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-sun-gold no-print">
-                <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-end">
-                    <!-- Date filters -->
-                    <div class="flex flex-wrap gap-3 items-end">
+            <!-- ========== NEW TOP SECTION ========== -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md border-l-[6px] border-sun-gold mb-6 no-print flex flex-col md:flex-row items-center gap-8">
+                <!-- Chart on the left -->
+                <div class="w-full md:w-1/4 max-w-[250px] flex justify-center">
+                    <div class="relative h-44 w-full"><canvas id="chartTipo"></canvas></div>
+                </div>
+                
+                <!-- Title and Filters on the right -->
+                <div class="flex-1 flex flex-col justify-center w-full">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 dark:text-gray-100 mb-6 tracking-tight border-b pb-3 border-gray-100 dark:border-slate-700">Quejas, Sugerencias y Felicitaciones</h2>
+                    
+                    <div class="flex flex-wrap items-end gap-4">
                         <div>
-                            <label
-                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Desde</label>
-                            <input type="date" id="startDate"
-                                class="border p-2 rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600">
-                        </div>
-                        <div>
-                            <label
-                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Hasta</label>
-                            <input type="date" id="endDate"
-                                class="border p-2 rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600">
-                        </div>
-                        <button onclick="loadData()"
-                            class="bg-sun-green text-white px-4 py-2 rounded-lg hover:bg-green-800 text-sm font-bold transition h-[38px] shadow">🔄
-                            Actualizar</button>
-                    </div>
-
-                    <!-- Dropdown filters -->
-                    <div class="flex flex-wrap gap-3 items-end">
-                        <div>
-                            <label
-                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Rancho</label>
-                            <select id="filterRancho" onchange="applyFilters()"
-                                class="border p-2 rounded-lg text-sm min-w-[140px] dark:bg-slate-700 dark:border-slate-600">
-                                <option value="">Todos</option>
-                            </select>
+                            <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1 tracking-wider">Fecha inicio</label>
+                            <input type="date" id="startDate" class="border border-gray-300 p-2.5 rounded-xl text-sm font-medium dark:bg-slate-700 dark:border-slate-600 focus:outline-none focus:border-sun-gold focus:ring-2 focus:ring-sun-gold/20 transition">
                         </div>
                         <div>
-                            <label
-                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Tipo</label>
-                            <select id="filterTipo" onchange="applyFilters()"
-                                class="border p-2 rounded-lg text-sm min-w-[130px] dark:bg-slate-700 dark:border-slate-600">
-                                <option value="">Todos</option>
-                                <option value="Queja">⚠️ Quejas</option>
-                                <option value="Sugerencia">💡 Sugerencias</option>
-                                <option value="Felicitaciones">👏 Felicitaciones</option>
-                            </select>
+                            <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1 tracking-wider">Fecha Fin</label>
+                            <input type="date" id="endDate" class="border border-gray-300 p-2.5 rounded-xl text-sm font-medium dark:bg-slate-700 dark:border-slate-600 focus:outline-none focus:border-sun-gold focus:ring-2 focus:ring-sun-gold/20 transition">
                         </div>
-                        <div>
-                            <label
-                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Estado</label>
-                            <select id="filterEstado" onchange="applyFilters()"
-                                class="border p-2 rounded-lg text-sm min-w-[130px] dark:bg-slate-700 dark:border-slate-600">
-                                <option value="">Todos</option>
-                                <option value="Nuevo">🆕 Nuevo</option>
-                                <option value="En proceso">🔄 En proceso</option>
-                                <option value="Resuelto">✅ Resuelto</option>
-                                <option value="Descartado">❌ Descartado</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Search + Export -->
-                    <div class="flex flex-wrap gap-3 items-end">
-                        <div class="relative">
-                            <label
-                                class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block">Buscar</label>
-                            <input type="text" id="searchInput" onkeyup="applyFilters()"
-                                placeholder="Escribe para buscar..."
-                                class="border p-2 rounded-lg text-sm pl-8 min-w-[180px] dark:bg-slate-700 dark:border-slate-600">
-                            <svg class="w-4 h-4 text-gray-400 absolute left-2.5 bottom-2.5" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </div>
-                        <button onclick="exportCSV()"
-                            class="bg-sun-gold text-gray-900 px-4 py-2 rounded-lg hover:bg-yellow-500 text-sm font-bold transition h-[38px] shadow flex items-center gap-1">
-                            📥 CSV
+                        <button onclick="loadData()" class="bg-sun-green text-white px-8 py-2.5 rounded-xl hover:bg-green-800 text-sm font-extrabold transition shadow-md flex items-center gap-2 transform hover:-translate-y-0.5">
+                            Filtrar
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
                         </button>
+
+                        <!-- Search & Export float right -->
+                        <div class="ml-auto flex items-end gap-3 w-full md:w-auto mt-4 md:mt-0">
+                            <div class="relative flex-1 md:flex-none">
+                                <input type="text" id="searchInput" onkeyup="applyFilters()" placeholder="Buscar..." class="w-full border border-gray-300 p-2.5 rounded-xl text-sm pl-9 font-medium dark:bg-slate-700 dark:border-slate-600 focus:outline-none focus:border-sun-gold focus:ring-2 focus:ring-sun-gold/20 transition">
+                                <svg class="w-4 h-4 text-gray-400 absolute left-3 bottom-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <button onclick="exportCSV()" class="bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-200 px-4 py-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-600 text-sm font-bold transition shadow-sm border border-gray-200 dark:border-slate-600">📥 CSV</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ========== KPIs + CHARTS ========== -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="stat-card bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-red-500 cursor-pointer"
-                    onclick="quickFilter('Queja')">
-                    <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider">Quejas</p>
-                    <h3 class="text-3xl font-black text-red-700 dark:text-red-400 mt-1" id="countQuejas">0</h3>
-                    <span class="text-lg absolute right-4 top-4">⚠️</span>
-                </div>
-                <div class="stat-card bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-yellow-400 cursor-pointer"
-                    onclick="quickFilter('Sugerencia')">
-                    <p class="text-[10px] font-bold text-yellow-600 uppercase tracking-wider">Sugerencias</p>
-                    <h3 class="text-3xl font-black text-yellow-700 dark:text-yellow-400 mt-1" id="countSugerencias">0
-                    </h3>
-                </div>
-                <div class="stat-card bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-green-500 cursor-pointer"
-                    onclick="quickFilter('Felicitaciones')">
-                    <p class="text-[10px] font-bold text-green-600 uppercase tracking-wider">Felicitaciones</p>
-                    <h3 class="text-3xl font-black text-green-700 dark:text-green-400 mt-1" id="countFelicitaciones">0
-                    </h3>
-                </div>
-                <div class="stat-card bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md border-l-4 border-blue-500">
-                    <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Total</p>
-                    <h3 class="text-3xl font-black text-blue-700 dark:text-blue-400 mt-1" id="countTotal">0</h3>
-                </div>
-            </div>
+            <!-- ========== MAIN LAYOUT ========== -->
+            <div class="flex flex-col lg:flex-row gap-6">
+                
+                <!-- LEFT COLUMN: Status Filters -->
+                <div class="w-full lg:w-1/4 flex flex-col gap-5">
+                    <button id="btnFilterNuevo" onclick="setEstadoFilter('Nuevo')" class="estado-btn relative p-6 bg-white dark:bg-slate-800 rounded-2xl shadow-md border-l-[8px] border-blue-500 text-left transition-all duration-300 transform hover:scale-[1.02] focus:outline-none">
+                        <span class="block text-2xl font-extrabold text-blue-700 dark:text-blue-400 tracking-tight">Nuevo</span>
+                        <span class="absolute top-1/2 -translate-y-1/2 right-6 text-5xl font-black text-blue-100 dark:text-blue-900/50 transition-colors duration-300" id="countNuevo">0</span>
+                    </button>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md">
-                    <h4
-                        class="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center mb-2 uppercase tracking-wider">
-                        Por Situación</h4>
-                    <div class="relative h-48"><canvas id="chartTipo"></canvas></div>
-                </div>
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md md:col-span-2">
-                    <h4
-                        class="text-[10px] font-bold text-gray-500 dark:text-gray-400 text-center mb-2 uppercase tracking-wider">
-                        Origen (Rancho)</h4>
-                    <div class="relative h-48"><canvas id="chartRancho"></canvas></div>
-                </div>
-            </div>
+                    <button id="btnFilterProceso" onclick="setEstadoFilter('En proceso')" class="estado-btn relative p-6 bg-white dark:bg-slate-800 rounded-2xl shadow border-l-[8px] border-yellow-500 text-left transition-all duration-300 transform hover:scale-[1.02] focus:outline-none opacity-50 hover:opacity-80">
+                        <span class="block text-2xl font-extrabold text-yellow-600 dark:text-yellow-400 tracking-tight">En Proceso</span>
+                        <span class="absolute top-1/2 -translate-y-1/2 right-6 text-5xl font-black text-yellow-100 dark:text-yellow-900/50 transition-colors duration-300" id="countProceso">0</span>
+                    </button>
 
-            <!-- ========== MESSAGES WALL ========== -->
-            <div>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-                    <h2 class="text-xl font-extrabold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-                        📋 Mensajes
-                        <span
-                            class="text-xs font-normal text-gray-500 bg-gray-200 dark:bg-slate-700 px-3 py-1 rounded-full"
-                            id="totalMensajes">0 visibles</span>
-                    </h2>
-                    <!-- Pagination controls -->
-                    <div id="paginationControls" class="flex items-center gap-2 text-sm no-print">
-                        <button onclick="changePage(-1)" id="btnPrev"
-                            class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40"
-                            disabled>← Ant</button>
-                        <span id="pageInfo" class="text-gray-500 dark:text-gray-400 font-medium">1 / 1</span>
-                        <button onclick="changePage(1)" id="btnNext"
-                            class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40"
-                            disabled>Sig →</button>
+                    <button id="btnFilterResuelto" onclick="setEstadoFilter('Resuelto')" class="estado-btn relative p-6 bg-white dark:bg-slate-800 rounded-2xl shadow border-l-[8px] border-green-500 text-left transition-all duration-300 transform hover:scale-[1.02] focus:outline-none opacity-50 hover:opacity-80">
+                        <span class="block text-2xl font-extrabold text-green-600 dark:text-green-400 tracking-tight">Resuelto</span>
+                        <span class="absolute top-1/2 -translate-y-1/2 right-6 text-5xl font-black text-green-100 dark:text-green-900/50 transition-colors duration-300" id="countResuelto">0</span>
+                    </button>
+
+                    <button id="btnFilterDescartado" onclick="setEstadoFilter('Descartado')" class="estado-btn relative p-6 bg-white dark:bg-slate-800 rounded-2xl shadow border-l-[8px] border-gray-500 text-left transition-all duration-300 transform hover:scale-[1.02] focus:outline-none opacity-50 hover:opacity-80">
+                        <span class="block text-2xl font-extrabold text-gray-600 dark:text-gray-400 tracking-tight">Descartado</span>
+                        <span class="absolute top-1/2 -translate-y-1/2 right-6 text-5xl font-black text-gray-200 dark:text-gray-700/50 transition-colors duration-300" id="countDescartado">0</span>
+                    </button>
+                </div>
+
+                <!-- RIGHT COLUMN: Case List (Large Card) -->
+                <div class="w-full lg:w-3/4 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-gray-100 dark:border-slate-700 overflow-hidden flex flex-col h-[750px]">
+                    <!-- Header -->
+                    <div class="bg-gray-50 dark:bg-slate-700/50 p-6 border-b border-gray-200 dark:border-slate-600 flex justify-between items-center z-10 shadow-sm">
+                        <h3 class="text-xl font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+                            <span id="listTitleIcon" class="text-2xl drop-shadow-sm">🆕</span> 
+                            <span id="listTitleText">Vista Resumida - Nuevo</span>
+                        </h3>
+                        <span class="text-sm font-bold bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 px-4 py-1.5 rounded-xl shadow-sm border border-gray-100 dark:border-slate-600" id="totalMensajes">0 casos</span>
                     </div>
-                </div>
+                    
+                    <!-- List Container (Scrollable) -->
+                    <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50 dark:bg-slate-800/50 custom-scrollbar" id="feedbackWall">
+                        <!-- Cards go here -->
+                    </div>
 
-                <div id="feedbackWall" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                </div>
-
-                <!-- Bottom pagination -->
-                <div id="paginationBottom" class="flex justify-center items-center gap-2 mt-6 text-sm no-print">
-                    <button onclick="changePage(-1)"
-                        class="btnPrevBot px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40"
-                        disabled>← Anterior</button>
-                    <span id="pageInfoBot" class="text-gray-500 dark:text-gray-400 font-medium">1 / 1</span>
-                    <button onclick="changePage(1)"
-                        class="btnNextBot px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40"
-                        disabled>Siguiente →</button>
+                    <!-- Footer / Pagination -->
+                    <div class="bg-white dark:bg-slate-800 p-5 border-t border-gray-200 dark:border-slate-600 flex justify-center items-center gap-6 no-print shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+                        <button onclick="changePage(-1)" class="btnPrevBot px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40" disabled>← Anterior</button>
+                        <span id="pageInfoBot" class="text-gray-500 dark:text-gray-400 font-bold bg-gray-50 dark:bg-slate-900 px-5 py-2.5 rounded-xl border border-gray-100 dark:border-slate-700">1 / 1</span>
+                        <button onclick="changePage(1)" class="btnNextBot px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition font-bold disabled:opacity-40" disabled>Siguiente →</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -392,62 +339,97 @@
         </div>
     </div>
 
-    <!-- ==================== MODAL SEGUIMIENTO ==================== -->
-    <div id="seguimientoModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSeguimientoModal()"></div>
-        <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border-t-4 border-purple-500 max-h-[90vh] flex flex-col">
-            <div class="p-6 border-b border-gray-200 dark:border-slate-600">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                        📋 Historial de Seguimiento
-                        <span id="seguimientoFolio" class="text-xs font-mono text-gray-400"></span>
-                    </h3>
-                    <button onclick="closeSeguimientoModal()"
-                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none">&times;</button>
-                </div>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1">
-                <div id="seguimientoList" class="space-y-3 mb-6">
-                    <!-- Seguimientos cargados dinámicamente -->
-                </div>
-                <div id="noSeguimientos" class="text-center py-8 text-gray-400">
-                    <p class="text-4xl mb-2">📭</p>
-                    <p>No hay seguimientos registrados.</p>
-                    <p class="text-sm">Usa el formulario abaixo para agregar el primero.</p>
-                </div>
-            </div>
-            <div class="p-6 border-t border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50">
-                <h4 class="text-sm font-bold text-gray-700 dark:text-gray-200 mb-3 flex items-center gap-2">
-                    ➕ Agregar Nueva Actualización
-                </h4>
-                <form id="seguimientoForm" class="space-y-3">
-                    <input type="hidden" id="seguimientoItemId">
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Tipo de actualización</label>
-                        <select id="seguimientoTipo" required
-                            class="w-full p-2.5 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:border-purple-500 outline-none">
-                            <option value="Llamada">📞 Llamada</option>
-                            <option value="Correo">📧 Correo</option>
-                            <option value="Reunión">👥 Reunión</option>
-                            <option value="Nota">📝 Nota interna</option>
-                            <option value="Actualización">🔄 Actualización de estado</option>
-                            <option value="Otro">📌 Otro</option>
+    <!-- ==================== MODAL DETALLE CASO ==================== -->
+    <div id="caseDetailsModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCaseDetailsModal()"></div>
+        <div class="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-5xl mx-4 overflow-hidden flex flex-col max-h-[90vh] border-t-[8px]" id="modalBorderTop">
+            
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-900/50">
+                <h3 class="text-2xl font-black text-gray-800 dark:text-gray-100 flex items-center gap-3">
+                    <span id="modalIcon" class="text-3xl drop-shadow-sm"></span>
+                    <span id="modalTipo">Detalle del Caso</span> 
+                    <span id="modalFolio" class="text-sm font-mono font-bold bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 px-3 py-1 rounded-lg shadow-sm text-gray-500 ml-2"></span>
+                </h3>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-white dark:bg-slate-800 p-1.5 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700">
+                        <span class="text-xs font-bold text-gray-400 pl-2 uppercase">Estado:</span>
+                        <select id="modalEstadoSelect" onchange="changeEstadoFromModal(this.value)" class="font-bold py-1.5 px-3 rounded-lg border-0 outline-none cursor-pointer text-sm bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 transition">
+                            <option value="Nuevo">🆕 Nuevo</option>
+                            <option value="En proceso">🔄 En proceso</option>
+                            <option value="Resuelto">✅ Resuelto</option>
+                            <option value="Descartado">❌ Descartado</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Descripción</label>
-                        <textarea id="seguimientoDescripcion" rows="3" required
-                            class="w-full p-3 border rounded-lg text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:border-purple-500 outline-none resize-none"
-                            placeholder="Describe el avance o detalle del seguimiento..."></textarea>
+                    <button onclick="closeCaseDetailsModal()" class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 text-4xl leading-none transition-colors">&times;</button>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
+                <!-- Left Side: Case Info -->
+                <div class="w-full md:w-5/12 p-6 overflow-y-auto border-r border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 custom-scrollbar">
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg> Mensaje Original</h4>
+                            <div class="bg-gray-50 dark:bg-slate-700/30 p-5 rounded-2xl border border-gray-100 dark:border-slate-600 shadow-inner">
+                                <p id="modalMensaje" class="text-gray-800 dark:text-gray-200 whitespace-pre-wrap text-[15px] leading-relaxed font-medium italic">"..."</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gray-50 dark:bg-slate-700/30 p-4 rounded-2xl border border-gray-100 dark:border-slate-600">
+                                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">📍 Rancho</h4>
+                                <p id="modalRancho" class="font-bold text-gray-800 dark:text-gray-200 text-sm"></p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-slate-700/30 p-4 rounded-2xl border border-gray-100 dark:border-slate-600">
+                                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">📅 Fecha</h4>
+                                <p id="modalFecha" class="font-bold text-gray-800 dark:text-gray-200 text-sm"></p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> Datos de Contacto</h4>
+                            <div id="modalContacto" class="bg-blue-50/50 dark:bg-blue-900/10 p-5 rounded-2xl border border-blue-100 dark:border-blue-800/30 space-y-3 text-sm">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
                     </div>
-                    <button type="submit" id="btnAgregarSeguimiento"
-                        class="w-full py-3 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 transition shadow-lg flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Agregar Seguimiento
-                    </button>
-                </form>
+                </div>
+
+                <!-- Right Side: Seguimientos -->
+                <div class="w-full md:w-7/12 flex flex-col bg-gray-50 dark:bg-slate-900/40 relative">
+                    <div class="p-5 border-b border-gray-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm z-10 shadow-sm flex justify-between items-center">
+                        <h4 class="font-extrabold text-gray-700 dark:text-gray-300 text-lg flex items-center gap-2">
+                            📋 Historial de Seguimientos
+                        </h4>
+                        <span id="seguimientosCount" class="bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 font-bold text-xs px-2.5 py-1 rounded-full">0</span>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar" id="seguimientoList">
+                        <!-- Seguimientos cargados dinámicamente -->
+                    </div>
+
+                    <div class="p-5 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-10">
+                        <form id="seguimientoForm" class="flex flex-col gap-3">
+                            <input type="hidden" id="seguimientoItemId">
+                            <div class="flex gap-3">
+                                <select id="seguimientoTipo" required class="p-3 border rounded-xl text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition font-medium w-1/3">
+                                    <option value="Llamada">📞 Llamada</option>
+                                    <option value="Correo">📧 Correo</option>
+                                    <option value="Reunión">👥 Reunión</option>
+                                    <option value="Nota">📝 Nota interna</option>
+                                    <option value="Actualización">🔄 Cambio de estado</option>
+                                    <option value="Otro">📌 Otro</option>
+                                </select>
+                                <textarea id="seguimientoDescripcion" rows="1" required class="flex-1 p-3 border rounded-xl text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition resize-none" placeholder="Escribe un nuevo seguimiento..."></textarea>
+                                <button type="submit" id="btnAgregarSeguimiento" class="px-6 py-3 bg-purple-600 text-white font-extrabold rounded-xl hover:bg-purple-700 transition flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                    <span>Enviar</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -466,6 +448,8 @@
         const PAGE_SIZE = 20;
         let currentPage = 1;
         let totalPages = 1;
+        let currentEstadoFilter = 'Nuevo';
+
 
         // Estado config
         const ESTADOS = {
@@ -531,13 +515,6 @@
                 document.getElementById('startDate').value = d.toISOString().split('T')[0];
                 document.getElementById('endDate').value = new Date().toISOString().split('T')[0];
             }
-            // Populate rancho filter
-            const sel = document.getElementById('filterRancho');
-            ranchos.forEach(r => {
-                const opt = document.createElement('option');
-                opt.value = r; opt.textContent = r;
-                sel.appendChild(opt);
-            });
 
             loadData();
         }
@@ -557,45 +534,66 @@
             if (error) { console.error('Error cargando datos:', error); alert('No se pudieron cargar los datos. Verifica tu conexión e intenta de nuevo.'); return; }
 
             allData = data;
-            applyFilters();
             updateKPIs(data);
             renderCharts(data);
+            setEstadoFilter(currentEstadoFilter || 'Nuevo');
         }
 
         // ===================== FILTERS =====================
+        function setEstadoFilter(estado) {
+            currentEstadoFilter = estado;
+            
+            // Update button styles
+            const buttons = {
+                'Nuevo': 'btnFilterNuevo',
+                'En proceso': 'btnFilterProceso',
+                'Resuelto': 'btnFilterResuelto',
+                'Descartado': 'btnFilterDescartado'
+            };
+            
+            for (let e in buttons) {
+                const btn = document.getElementById(buttons[e]);
+                if (e === estado) {
+                    btn.classList.remove('opacity-50', 'hover:opacity-80');
+                    btn.classList.add('opacity-100', 'ring-2', 'ring-offset-2');
+                    if (e==='Nuevo') btn.classList.add('ring-blue-500', 'dark:ring-blue-400');
+                    if (e==='En proceso') btn.classList.add('ring-yellow-500', 'dark:ring-yellow-400');
+                    if (e==='Resuelto') btn.classList.add('ring-green-500', 'dark:ring-green-400');
+                    if (e==='Descartado') btn.classList.add('ring-gray-500', 'dark:ring-gray-400');
+                } else {
+                    btn.classList.add('opacity-50', 'hover:opacity-80');
+                    btn.classList.remove('opacity-100', 'ring-2', 'ring-offset-2', 'ring-blue-500', 'dark:ring-blue-400', 'ring-yellow-500', 'dark:ring-yellow-400', 'ring-green-500', 'dark:ring-green-400', 'ring-gray-500', 'dark:ring-gray-400');
+                }
+            }
+
+            // Update List Title
+            const icons = {'Nuevo': '🆕', 'En proceso': '🔄', 'Resuelto': '✅', 'Descartado': '❌'};
+            document.getElementById('listTitleIcon').innerText = icons[estado] || '📋';
+            document.getElementById('listTitleText').innerText = `Vista Resumida - ${estado}`;
+
+            applyFilters();
+        }
+
         function applyFilters() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
-            const filterRancho = document.getElementById('filterRancho').value;
-            const filterTipo = document.getElementById('filterTipo').value;
-            const filterEstado = document.getElementById('filterEstado').value;
-
+            
             filteredData = allData.filter(item => {
-                // Text search
                 const matchSearch = !searchText ||
                     (item.mensaje || '').toLowerCase().includes(searchText) ||
                     (item.rancho || '').toLowerCase().includes(searchText) ||
                     (item.tipo_situacion || '').toLowerCase().includes(searchText) ||
                     (item.nombre_completo || '').toLowerCase().includes(searchText) ||
-                    (item.folio || '').toLowerCase().includes(searchText) ||
-                    (item.telefono || '').toLowerCase().includes(searchText);
+                    (item.folio || '').toLowerCase().includes(searchText);
 
-                // Dropdown filters
-                const matchRancho = !filterRancho || item.rancho === filterRancho;
-                const matchTipo = !filterTipo || item.tipo_situacion === filterTipo;
-                const matchEstado = !filterEstado || (item.estado || 'Nuevo') === filterEstado;
+                const estado = item.estado || 'Nuevo';
+                const matchEstado = estado === currentEstadoFilter;
 
-                return matchSearch && matchRancho && matchTipo && matchEstado;
+                return matchSearch && matchEstado;
             });
 
-            // Reset pagination
             currentPage = 1;
             totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
             renderPage();
-        }
-
-        function quickFilter(tipo) {
-            document.getElementById('filterTipo').value = tipo;
-            applyFilters();
         }
 
         // ===================== PAGINATION =====================
@@ -606,42 +604,36 @@
 
             renderWall(pageData);
             updatePagination();
-            document.getElementById('totalMensajes').innerText = filteredData.length + ' encontrados';
+            document.getElementById('totalMensajes').innerText = filteredData.length + (filteredData.length === 1 ? ' caso' : ' casos');
         }
 
         function changePage(dir) {
             currentPage += dir;
             currentPage = Math.max(1, Math.min(currentPage, totalPages));
             renderPage();
-            document.getElementById('feedbackWall').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('feedbackWall').scrollTop = 0;
         }
 
         function updatePagination() {
             const info = `${currentPage} / ${totalPages}`;
-            document.getElementById('pageInfo').innerText = info;
             document.getElementById('pageInfoBot').innerText = info;
 
-            document.getElementById('btnPrev').disabled = currentPage <= 1;
-            document.getElementById('btnNext').disabled = currentPage >= totalPages;
             document.querySelectorAll('.btnPrevBot').forEach(b => b.disabled = currentPage <= 1);
             document.querySelectorAll('.btnNextBot').forEach(b => b.disabled = currentPage >= totalPages);
-
-            // Hide pagination if only 1 page
-            const show = totalPages > 1;
-            document.getElementById('paginationControls').style.display = show ? 'flex' : 'none';
-            document.getElementById('paginationBottom').style.display = show ? 'flex' : 'none';
         }
 
         // ===================== KPIs =====================
         function updateKPIs(data) {
-            const quejas = data.filter(r => r.tipo_situacion === 'Queja').length;
-            const sugerencias = data.filter(r => r.tipo_situacion === 'Sugerencia').length;
-            const felis = data.filter(r => r.tipo_situacion === 'Felicitaciones').length;
-
-            document.getElementById('countQuejas').innerText = quejas;
-            document.getElementById('countSugerencias').innerText = sugerencias;
-            document.getElementById('countFelicitaciones').innerText = felis;
-            document.getElementById('countTotal').innerText = data.length;
+            let counts = {'Nuevo': 0, 'En proceso': 0, 'Resuelto': 0, 'Descartado': 0};
+            data.forEach(d => {
+                const est = d.estado || 'Nuevo';
+                if (counts[est] !== undefined) counts[est]++;
+            });
+            
+            document.getElementById('countNuevo').innerText = counts['Nuevo'];
+            document.getElementById('countProceso').innerText = counts['En proceso'];
+            document.getElementById('countResuelto').innerText = counts['Resuelto'];
+            document.getElementById('countDescartado').innerText = counts['Descartado'];
         }
 
         // ===================== RENDER CARDS =====================
@@ -650,101 +642,68 @@
             container.innerHTML = '';
 
             if (data.length === 0) {
-                container.innerHTML = '<p class="text-gray-400 col-span-full text-center py-16 text-lg">No hay mensajes que coincidan con los filtros.</p>';
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 min-h-[300px]">
+                        <span class="text-6xl mb-4">📭</span>
+                        <p class="text-xl font-extrabold tracking-tight">No hay casos</p>
+                    </div>`;
                 return;
             }
 
             data.forEach((item, idx) => {
                 let borderClass = 'border-l-[6px] border-gray-300';
-                let bgHeader = 'bg-gray-50 dark:bg-slate-700';
                 let icon = '📝';
+                let iconColor = 'text-gray-500 bg-gray-100 dark:bg-slate-700';
 
                 if (item.tipo_situacion === 'Queja') {
                     borderClass = 'border-l-[6px] border-red-500';
-                    bgHeader = 'bg-red-50 dark:bg-red-900/30';
                     icon = '⚠️';
+                    iconColor = 'text-red-600 bg-red-100 dark:bg-red-900/50';
                 } else if (item.tipo_situacion === 'Sugerencia') {
                     borderClass = 'border-l-[6px] border-yellow-400';
-                    bgHeader = 'bg-yellow-50 dark:bg-yellow-900/30';
                     icon = '💡';
+                    iconColor = 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/50';
                 } else if (item.tipo_situacion === 'Felicitaciones') {
                     borderClass = 'border-l-[6px] border-green-500';
-                    bgHeader = 'bg-green-50 dark:bg-green-900/30';
                     icon = '👏';
+                    iconColor = 'text-green-600 bg-green-100 dark:bg-green-900/50';
                 }
 
-                const date = new Date(item.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const date = new Date(item.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
 
-                // Estado
-                const estado = item.estado || 'Nuevo';
-                const estadoConfig = ESTADOS[estado] || ESTADOS['Nuevo'];
-
-                // Contact info
-                let contactoHtml = `<span class="text-xs font-bold text-gray-400 italic">Anónimo</span>`;
+                let contactInfo = '';
                 if (item.nombre_completo || item.correo || item.telefono) {
-                    contactoHtml = `
-                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-2 border-t pt-2 border-gray-100 dark:border-slate-600 space-y-0.5">
-                            ${item.nombre_completo ? `<p><strong>👤</strong> ${item.nombre_completo}</p>` : ''}
-                            ${item.puesto ? `<p><strong>💼</strong> ${item.puesto}</p>` : ''}
-                            ${item.telefono ? `<p><strong>📱</strong> ${item.telefono}</p>` : ''}
-                            ${item.correo ? `<p><strong>📧</strong> ${item.correo}</p>` : ''}
-                        </div>
-                    `;
+                    const parts = [];
+                    if (item.nombre_completo) parts.push(`👤 ${item.nombre_completo}`);
+                    if (item.telefono) parts.push(`📱 ${item.telefono}`);
+                    if (item.correo) parts.push(`📧 ${item.correo}`);
+                    contactInfo = parts.join(' &nbsp;·&nbsp; ');
+                } else {
+                    contactInfo = '👻 <span class="italic">Anónimo</span>';
                 }
-
-                // Folio
-                const folioHtml = item.folio ? `<span class="text-[10px] text-gray-400 font-mono">${item.folio}</span>` : '';
 
                 const card = document.createElement('div');
-                card.className = `card-enter bg-white dark:bg-slate-800 rounded-xl shadow hover:shadow-xl transition duration-300 overflow-hidden flex flex-col ${borderClass}`;
-                card.style.animationDelay = `${idx * 0.05}s`;
+                card.className = `card-enter cursor-pointer bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-600 shadow-sm hover:shadow-md hover:border-purple-400 dark:hover:border-purple-500 transition-all duration-300 p-5 flex gap-5 items-center ${borderClass} group`;
+                card.style.animationDelay = `${idx * 0.03}s`;
+                card.onclick = () => openCaseDetailsModal(item.id);
 
                 card.innerHTML = `
-                    <div class="p-3 ${bgHeader} flex justify-between items-center border-b border-gray-100 dark:border-slate-600">
-                        <span class="font-bold text-sm text-gray-700 dark:text-gray-200 flex items-center gap-2">${icon} ${item.tipo_situacion}</span>
-                        <span class="text-[10px] text-gray-500 dark:text-gray-400">${date}</span>
+                    <div class="w-14 h-14 rounded-full flex items-center justify-center text-2xl shrink-0 shadow-inner ${iconColor}">
+                        ${icon}
                     </div>
-                    <div class="p-4 flex-1">
-                        <p class="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap leading-relaxed">"${item.mensaje}"</p>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start mb-1.5 gap-4">
+                            <span class="font-extrabold text-gray-800 dark:text-gray-100 text-lg truncate">${item.tipo_situacion} - ${item.rancho}</span>
+                            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 shrink-0 bg-gray-100 dark:bg-slate-700/50 px-2.5 py-1 rounded-lg border border-gray-200 dark:border-slate-600">${date}</span>
+                        </div>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400 truncate w-full pr-4">${contactInfo}</p>
                     </div>
-                    <div class="p-3 bg-gray-50 dark:bg-slate-700/50 border-t border-gray-100 dark:border-slate-600 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold text-sun-green bg-green-100 dark:bg-green-900/50 px-2 py-1 rounded-full">🌱 ${item.rancho}</span>
-                            ${folioHtml}
-                        </div>
-                        ${contactoHtml}
-                        <!-- Estado dropdown -->
-                        <div class="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-slate-600">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase">Estado:</span>
-                            <select onchange="changeEstado('${item.id}', this.value)" class="text-xs font-bold py-1 px-2 rounded-full border estado-badge ${estadoConfig.color} cursor-pointer outline-none">
-                                ${Object.keys(ESTADOS).map(e => `<option value="${e}" ${e === estado ? 'selected' : ''}>${ESTADOS[e].icon} ${e}</option>`).join('')}
-                            </select>
-                            <button onclick="openSeguimientoModal('${item.id}')" class="ml-auto text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-bold py-1 px-2 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800 transition flex items-center gap-1" title="Añadir seguimiento">
-                                📝 Seguimiento
-                            </button>
-                        </div>
+                    <div class="shrink-0 text-gray-300 dark:text-gray-600 group-hover:text-purple-500 group-hover:translate-x-1 transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </div>
                 `;
                 container.appendChild(card);
             });
-        }
-
-        // ===================== CHANGE ESTADO =====================
-        async function changeEstado(id, newEstado) {
-            const { error } = await adminClient
-                .from('buzon_quejas')
-                .update({ estado: newEstado })
-                .eq('id', id);
-
-            if (error) {
-                console.error('Error al cambiar estado:', error);
-                alert('No se pudo actualizar el estado. Intenta de nuevo.');
-                return;
-            }
-
-            // Update local data
-            const item = allData.find(d => d.id == id);
-            if (item) item.estado = newEstado;
         }
 
         // ===================== EXPORT CSV =====================
@@ -782,7 +741,6 @@
         function renderCharts(data) {
             const isDark = document.documentElement.classList.contains('dark');
             const textColor = isDark ? '#94a3b8' : '#6b7280';
-            const gridColor = isDark ? '#334155' : '#e5e7eb';
 
             const count = (field) => data.reduce((acc, curr) => {
                 const val = curr[field] || 'N/A';
@@ -790,18 +748,12 @@
                 return acc;
             }, {});
 
-            createChart('chartTipo', 'doughnut', count('tipo_situacion'), ['#D32F2F', '#FBC02D', '#2E7D32'], {
-                plugins: { legend: { display: true, position: 'right', labels: { boxWidth: 12, color: textColor, font: { size: 11 } } } }
-            });
-
-            const paleta = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#8AC249', '#E91E63', '#00BCD4'];
-            createChart('chartRancho', 'bar', count('rancho'), paleta, {
-                indexAxis: 'y',
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { ticks: { color: textColor }, grid: { color: gridColor } },
-                    y: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }
-                }
+            createChart('chartTipo', 'doughnut', count('tipo_situacion'), ['#ef4444', '#eab308', '#22c55e'], {
+                plugins: { 
+                    legend: { display: true, position: 'right', labels: { boxWidth: 12, color: textColor, font: { size: 11, weight: 'bold', family: 'Inter' } } } 
+                },
+                cutout: '65%',
+                layout: { padding: 0 }
             });
         }
 
@@ -817,7 +769,7 @@
                 type: type,
                 data: {
                     labels: labels,
-                    datasets: [{ data: values, backgroundColor: bg, borderWidth: 0, borderRadius: type === 'bar' ? 4 : 0 }]
+                    datasets: [{ data: values, backgroundColor: bg, borderWidth: 0 }]
                 },
                 options: {
                     responsive: true,
@@ -883,7 +835,7 @@
             }
         });
 
-        // ===================== SEGUIMIENTOS =====================
+        // ===================== CASE DETAILS MODAL & SEGUIMIENTOS =====================
         const ICONOS_SEGUIMIENTO = {
             'Llamada': '📞',
             'Correo': '📧',
@@ -893,23 +845,109 @@
             'Otro': '📌'
         };
 
-        let currentSeguimientoItemId = null;
+        let currentCaseId = null;
 
-        async function openSeguimientoModal(itemId) {
-            currentSeguimientoItemId = itemId;
+        async function openCaseDetailsModal(itemId) {
+            currentCaseId = itemId;
             const item = allData.find(d => d.id == itemId);
+            if (!item) return;
+
+            document.getElementById('caseDetailsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Top Header
+            let icon = '📝';
+            let iconColor = 'text-gray-500 bg-gray-100 dark:bg-slate-700';
+            if (item.tipo_situacion === 'Queja') {
+                icon = '⚠️'; iconColor = 'text-red-600 bg-red-100 dark:bg-red-900/50';
+            } else if (item.tipo_situacion === 'Sugerencia') {
+                icon = '💡'; iconColor = 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/50';
+            } else if (item.tipo_situacion === 'Felicitaciones') {
+                icon = '👏'; iconColor = 'text-green-600 bg-green-100 dark:bg-green-900/50';
+            }
+
+            const modalIcon = document.getElementById('modalIcon');
+            modalIcon.className = `w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-inner ${iconColor}`;
+            modalIcon.innerText = icon;
+
+            document.getElementById('modalTipo').innerText = item.tipo_situacion;
+            document.getElementById('modalRancho').innerText = item.rancho || 'N/A';
+            document.getElementById('modalFecha').innerText = new Date(item.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             
-            document.getElementById('seguimientoModal').classList.remove('hidden');
-            document.getElementById('seguimientoFolio').innerText = item?.folio || '';
-            document.getElementById('seguimientoItemId').value = itemId;
+            const folioEl = document.getElementById('modalFolio');
+            if (item.folio) {
+                folioEl.innerHTML = `<span class="bg-gray-100 dark:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-mono font-bold text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-600 shadow-sm">FOLIO: ${item.folio}</span>`;
+            } else {
+                folioEl.innerHTML = '';
+            }
+
+            // Status Dropdown
+            const estadoSelect = document.getElementById('modalEstadoSelect');
+            estadoSelect.value = item.estado || 'Nuevo';
+            updateModalEstadoColor(estadoSelect.value);
+
+            // Message
+            document.getElementById('modalMensaje').innerText = `"${item.mensaje}"`;
+
+            // Contact info
+            const contactContainer = document.getElementById('modalContacto');
+            if (item.nombre_completo || item.correo || item.telefono) {
+                contactContainer.innerHTML = `
+                    ${item.nombre_completo ? `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400">👤</div><span class="text-gray-700 dark:text-gray-300 font-medium">${item.nombre_completo}</span></div>` : ''}
+                    ${item.puesto ? `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">💼</div><span class="text-gray-700 dark:text-gray-300 font-medium">${item.puesto}</span></div>` : ''}
+                    ${item.telefono ? `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400">📱</div><span class="text-gray-700 dark:text-gray-300 font-medium">${item.telefono}</span></div>` : ''}
+                    ${item.correo ? `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400">📧</div><span class="text-gray-700 dark:text-gray-300 font-medium">${item.correo}</span></div>` : ''}
+                `;
+            } else {
+                contactContainer.innerHTML = `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-500">👻</div><span class="text-gray-500 italic">Anónimo</span></div>`;
+            }
+
+            // Load Seguimientos
             document.getElementById('seguimientoForm').reset();
-            
             await loadSeguimientos(itemId);
         }
 
-        function closeSeguimientoModal() {
-            document.getElementById('seguimientoModal').classList.add('hidden');
-            currentSeguimientoItemId = null;
+        function closeCaseDetailsModal() {
+            document.getElementById('caseDetailsModal').classList.add('hidden');
+            document.body.style.overflow = '';
+            currentCaseId = null;
+        }
+
+        async function changeEstadoFromModal(selectEl) {
+            if (!currentCaseId) return;
+            const newEstado = selectEl.value;
+            
+            updateModalEstadoColor(newEstado);
+
+            const { error } = await adminClient
+                .from('buzon_quejas')
+                .update({ estado: newEstado })
+                .eq('id', currentCaseId);
+
+            if (error) {
+                console.error('Error al cambiar estado:', error);
+                alert('No se pudo actualizar el estado. Intenta de nuevo.');
+                return;
+            }
+
+            const item = allData.find(d => d.id == currentCaseId);
+            if (item) item.estado = newEstado;
+
+            // Log an automatic update in seguimientos? Optional but good UX.
+            applyFilters();
+            updateKPIs(allData);
+        }
+
+        function updateModalEstadoColor(estado) {
+            const selectEl = document.getElementById('modalEstadoSelect');
+            selectEl.className = `text-sm font-bold py-1.5 px-3 rounded-xl border cursor-pointer outline-none transition-colors appearance-none pr-8 bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]`;
+            // Add custom SVG arrow
+            selectEl.style.backgroundImage = `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`;
+            
+            if (estado === 'Nuevo') selectEl.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-300', 'dark:bg-blue-900/50', 'dark:text-blue-300');
+            else if (estado === 'En proceso') selectEl.classList.add('bg-yellow-100', 'text-yellow-700', 'border-yellow-300', 'dark:bg-yellow-900/50', 'dark:text-yellow-300');
+            else if (estado === 'Resuelto') selectEl.classList.add('bg-green-100', 'text-green-700', 'border-green-300', 'dark:bg-green-900/50', 'dark:text-green-300');
+            else if (estado === 'Descartado') selectEl.classList.add('bg-gray-200', 'text-gray-600', 'border-gray-300', 'dark:bg-gray-700', 'dark:text-gray-400');
         }
 
         async function loadSeguimientos(itemId) {
@@ -940,20 +978,25 @@
                     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
                 const icono = ICONOS_SEGUIMIENTO[seg.tipo] || '📌';
-                const usuarioHtml = seg.usuario_correo ? `<span class="text-[10px] text-purple-600 dark:text-purple-400 font-medium">📧 ${seg.usuario_correo}</span>` : '';
+                const usuarioHtml = seg.usuario_correo ? `<span class="text-[10px] text-purple-600 dark:text-purple-400 font-medium bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded border border-purple-100 dark:border-purple-800">👤 ${seg.usuario_correo}</span>` : '';
                 
                 return `
-                    <div class="bg-white dark:bg-slate-700 rounded-xl p-4 border border-purple-100 dark:border-purple-900 shadow-sm">
-                        <div class="flex items-start justify-between gap-2 mb-2">
-                            <div class="flex flex-col gap-1">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded-full">
-                                    ${icono} ${seg.tipo}
-                                </span>
-                                ${usuarioHtml}
-                            </div>
-                            <span class="text-[10px] text-gray-400">${date}</span>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-100 dark:border-slate-600 shadow-sm relative">
+                        <div class="absolute -left-3 top-6 w-6 h-6 bg-purple-100 dark:bg-purple-900/50 rounded-full border-4 border-gray-50 dark:border-slate-800 flex items-center justify-center text-xs">
+                            ${icono}
                         </div>
-                        <p class="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">${seg.descripcion}</p>
+                        <div class="ml-2">
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <div class="flex flex-col gap-1.5">
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300">
+                                        ${seg.tipo}
+                                    </span>
+                                    ${usuarioHtml}
+                                </div>
+                                <span class="text-[10px] font-bold text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md">${date}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap mt-1 leading-relaxed">${seg.descripcion}</p>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -962,7 +1005,7 @@
         document.getElementById('seguimientoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const itemId = document.getElementById('seguimientoItemId').value;
+            if (!currentCaseId) return;
             const tipo = document.getElementById('seguimientoTipo').value;
             const descripcion = document.getElementById('seguimientoDescripcion').value.trim();
             
@@ -971,7 +1014,7 @@
             const btn = document.getElementById('btnAgregarSeguimiento');
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Guardando...';
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Guardando...';
             
             const { data: sessionData } = await adminClient.auth.getSession();
             const usuarioCorreo = sessionData?.session?.user?.email || '';
@@ -979,7 +1022,7 @@
             const { error } = await adminClient
                 .from('buzon_seguimientos')
                 .insert([{
-                    buzon_id: itemId,
+                    buzon_id: currentCaseId,
                     tipo: tipo,
                     descripcion: descripcion,
                     usuario_correo: usuarioCorreo
@@ -988,14 +1031,12 @@
             if (error) {
                 console.error('Error guardando seguimiento:', error);
                 alert('No se pudo guardar el seguimiento. Intenta de nuevo.');
-                btn.disabled = false;
-                btn.innerHTML = originalText;
             } else {
                 document.getElementById('seguimientoDescripcion').value = '';
-                await loadSeguimientos(itemId);
-                btn.disabled = false;
-                btn.innerHTML = originalText;
+                await loadSeguimientos(currentCaseId);
             }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         });
 
         // ===================== INIT =====================
